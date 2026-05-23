@@ -582,6 +582,37 @@
     const videoLink = document.getElementById('videoLink');
     const fontButton = document.getElementById('fontButton');
 
+    function escapeHTML(value) {
+      return String(value || '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function safeResourceUrl(url) {
+      const value = String(url || '').trim();
+      if (!value || value === '#') return '#';
+
+      try {
+        const parsed = new URL(value, window.location.href);
+        const allowedHosts = [
+          window.location.hostname,
+          'www.youtube.com',
+          'youtube.com',
+          'youtu.be',
+          'www.youtube-nocookie.com'
+        ];
+
+        if (!['http:', 'https:'].includes(parsed.protocol)) return '#';
+        return allowedHosts.includes(parsed.hostname) ? value : '#';
+      } catch {
+        return '#';
+      }
+    }
+
     function placeholderHTML(tipo, nome) {
       const icon = tipo === 'ebook'
         ? '<svg viewBox="0 0 24 24" fill="none" width="54" height="54"><path d="M6 4h8a3 3 0 0 1 3 3v13H9a3 3 0 0 0-3 3V4Z" stroke="#2d61ea" stroke-width="2" stroke-linejoin="round"/><path d="M17 20V7a3 3 0 0 0-3-3" stroke="#2d61ea" stroke-width="2" stroke-linecap="round"/></svg>'
@@ -643,7 +674,7 @@
             ${icon}
             <h2>${titulo}</h2>
             <p>${texto}</p>
-            <div class="pill">${nome}</div>
+            <div class="pill">${escapeHTML(nome)}</div>
           </div>
         </body>
         </html>
@@ -651,9 +682,11 @@
     }
 
     function setFrame(frame, url, tipo, nome) {
-      if (url && url.trim() && url.trim() !== '#') {
+      const safeUrl = safeResourceUrl(url);
+
+      if (safeUrl !== '#') {
         frame.removeAttribute('srcdoc');
-        frame.src = url;
+        frame.src = safeUrl;
       } else {
         frame.removeAttribute('src');
         frame.srcdoc = placeholderHTML(tipo, nome);
@@ -668,6 +701,9 @@
         button.type = 'button';
         button.className = 'plan-button' + (index === 0 ? ' active' : '');
         button.dataset.id = item.id;
+        const safeName = escapeHTML(item.nome);
+        const safeResumo = escapeHTML(item.resumo);
+
         button.innerHTML = `
           <div class="plan-top">
             <div class="plan-icon" aria-hidden="true">
@@ -677,8 +713,8 @@
             </div>
             <span class="plan-tag">Selecionar</span>
           </div>
-          <h3 class="plan-title">${item.nome}</h3>
-          <p class="card-text">${item.resumo}</p>
+          <h3 class="plan-title">${safeName}</h3>
+          <p class="card-text">${safeResumo}</p>
         `;
 
         button.addEventListener('click', () => selectPlan(item.id));
@@ -697,8 +733,8 @@
       ebookTitle.textContent = atual.ebookTitulo;
       videoTitle.textContent = atual.videoTitulo;
 
-      ebookLink.href = atual.ebookLink || '#';
-      videoLink.href = atual.videoLink || '#';
+      ebookLink.href = safeResourceUrl(atual.ebookLink);
+      videoLink.href = safeResourceUrl(atual.videoLink);
 
       setFrame(ebookFrame, atual.ebookEmbed, 'ebook', atual.nome);
       setFrame(videoFrame, atual.videoEmbed, 'video', atual.nome);
