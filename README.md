@@ -210,8 +210,8 @@ O projeto foi desenvolvido em grupo para a disciplina/projeto de extensão.
 Integrantes:
 
 - Eduardo Giomo Leme
-
-> Lista de integrantes a completar com os nomes reais do grupo.
+- Matheus dos Reis Silva Zavan
+- Guilherme Manoel
 
 ## Aprendizados do projeto
 
